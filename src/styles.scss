@@ -1,1 +1,81 @@
-/* You can add global styles to this file, and also import other style files */
+/* Global tokens and modernized palette — refined for 2026 UI standards */
+:root {
+  /* spacing & motion tokens */
+  --space-xs: 6px;
+  --space-sm: 12px;
+  --space-md: 20px;
+  --space-lg: 32px;
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-full: 999px;
+  --transition: 220ms;
+
+  /* color tokens */
+  --bg-primary: #f3f7fb; /* soft, cool background */
+  --surface-color: #ffffff;
+  --surface-elevated: #f7fbff;
+  --surface-glass: rgba(255,255,255,0.88);
+  --text-main: #071227; /* deep, legible */
+  --text-muted: #576b7a;
+  --border-color: rgba(7,18,39,0.06);
+  --accent-primary: #1565d8; /* vivid blue */
+  --accent-primary-700: #0b4fb3;
+  --accent-success: #17a673;
+  --accent-warning: #ffb14a;
+  --danger: #e04b4b;
+  --muted: #7a8b97;
+  --card-shadow: 0 18px 50px rgba(7,18,39,0.06);
+
+  /* toggle */
+  --toggle-bg: rgba(7,18,39,0.06);
+  --toggle-border-color: rgba(7,18,39,0.08);
+  --toggle-hover-bg: rgba(7,18,39,0.08);
+  --toggle-shadow: 0 8px 28px rgba(7,18,39,0.06);
+  --toggle-hover-shadow: 0 14px 40px rgba(7,18,39,0.08);
+}
+
+/* Dark theme overrides */
+.dark-theme {
+  --bg-primary: #061226;
+  --surface-color: #071428;
+  --surface-elevated: #0b1b2a;
+  --surface-glass: rgba(8,18,30,0.6);
+  --text-main: #e7f2fb;
+  --text-muted: #9fb4c8;
+  --border-color: rgba(255,255,255,0.06);
+  --accent-primary: #3aa0ff;
+  --accent-primary-700: #2b8fe0;
+  --accent-success: #32d58a;
+  --accent-warning: #ffc57a;
+  --danger: #ff7070;
+  --muted: #7b97ad;
+  --card-shadow: 0 20px 60px rgba(2,6,23,0.55);
+
+  --toggle-bg: rgba(255,255,255,0.06);
+  --toggle-border-color: rgba(255,255,255,0.08);
+  --toggle-hover-bg: rgba(255,255,255,0.08);
+  --toggle-shadow: 0 8px 28px rgba(0,0,0,0.45);
+}
+
+/* Base reset */
+* { box-sizing: border-box; }
+html, body { height: 100%; }
+body {
+  margin: 0; font-family: Inter, 'Segoe UI', system-ui, -apple-system, 'Helvetica Neue', Arial; background: var(--bg-primary); color: var(--text-main); -webkit-font-smoothing:antialiased; -moz-osx-font-smoothing:grayscale;
+}
+
+/* Typography helpers */
+h1,h2,h3,h4 { margin: 0; line-height: 1.15; }
+
+/* Inputs */
+input, select, textarea { background: linear-gradient(180deg, var(--surface-elevated), var(--surface-color)); border: 1px solid var(--border-color); color: var(--text-main); padding: 10px 12px; border-radius: var(--radius-sm); }
+input:focus, select:focus, textarea:focus { outline: none; border-color: var(--accent-primary); box-shadow: 0 12px 36px rgba(21,101,216,0.08); }
+
+/* Cards */
+.container, .card { background: var(--surface-color); border: 1px solid var(--border-color); border-radius: var(--radius-md); box-shadow: var(--card-shadow); }
+
+/* Utilities */
+.muted { color: var(--text-muted); }
+
+/* Accessibility: respect reduced motion */
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; animation: none !important; } }

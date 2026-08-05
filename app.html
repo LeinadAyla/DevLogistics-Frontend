@@ -1,0 +1,110 @@
+﻿<div class="container" style="max-width: 1000px; margin: 40px auto; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; padding: 20px; background: #f8f9fa; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.05);">
+  <header style="text-align: center; margin-bottom: 30px;">
+    <h1 style="color: #2c3e50; margin-bottom: 8px;">📦 DevLogistics - Painel de Controle</h1>
+    <p style="color: #7f8c8d; font-size: 1.1rem;">Sistema de Gerenciamento de Estoque e Logística (CRUD Completo)</p>
+  </header>
+
+  <!-- Alerta de Erro -->
+  <div *ngIf="errorMessage" style="background: #fadbd8; color: #78281f; padding: 14px 18px; border-radius: 6px; margin-bottom: 20px; border-left: 5px solid #c0392b; display: flex; align-items: center; justify-content: space-between; box-shadow: 0 2px 4px rgba(0,0,0,0.02);">
+    <span>⚠️ <strong>Atenção:</strong> {{ errorMessage }}</span>
+    <button (click)="errorMessage = ''" style="background: none; border: none; color: #78281f; font-weight: bold; cursor: pointer; font-size: 1rem;">&times;</button>
+  </div>
+
+  <!-- Alerta de Sucesso -->
+  <div *ngIf="successMessage" style="background: #d4efdf; color: #145a32; padding: 14px 18px; border-radius: 6px; margin-bottom: 20px; border-left: 5px solid #27ae60; display: flex; align-items: center; justify-content: space-between; box-shadow: 0 2px 4px rgba(0,0,0,0.02);">
+    <span>✅ <strong>Sucesso:</strong> {{ successMessage }}</span>
+  </div>
+
+  <!-- Formulário de Cadastro / Edição -->
+  <div [style.border-left]="isEditing ? '5px solid #f39c12' : '5px solid #27ae60'" style="background: #ffffff; padding: 20px; border-radius: 8px; box-shadow: 0 2px 6px rgba(0,0,0,0.03); margin-bottom: 30px;">
+    <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #ecf0f1; padding-bottom: 10px; margin-bottom: 15px;">
+      <h3 style="margin: 0; color: #34495e;">{{ isEditing ? 'Editar Item #' + editingId : 'Adicionar Novo Item' }}</h3>
+      <button *ngIf="isEditing" type="button" (click)="cancelEdit()" style="background: #95a5a6; color: white; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; font-size: 0.85rem; font-weight: bold;">Cancelar Edição</button>
+    </div>
+
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 15px;">
+      <div>
+        <label style="display: block; font-weight: 600; margin-bottom: 5px; color: #555;">Nome do Item:</label>
+        <input type="text" [(ngModel)]="newItem.name" placeholder="Ex: Caixa Térmica 50L" style="width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box;">
+      </div>
+      <div>
+        <label style="display: block; font-weight: 600; margin-bottom: 5px; color: #555;">Status:</label>
+        <select [(ngModel)]="newItem.status" style="width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 4px; background: #fff; box-sizing: border-box;">
+          <option value="Disponivel">Disponível</option>
+          <option value="Em Transito">Em Trânsito</option>
+          <option value="Manutencao">Manutenção</option>
+        </select>
+      </div>
+    </div>
+
+    <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 15px; margin-bottom: 20px;">
+      <div>
+        <label style="display: block; font-weight: 600; margin-bottom: 5px; color: #555;">Descrição:</label>
+        <input type="text" [(ngModel)]="newItem.description" placeholder="Ex: Setor A - Lote 4" style="width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box;">
+      </div>
+      <div>
+        <label style="display: block; font-weight: 600; margin-bottom: 5px; color: #555;">Quantidade:</label>
+        <input type="number" [(ngModel)]="newItem.quantity" min="1" style="width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box;">
+      </div>
+    </div>
+
+    <button type="button" (click)="saveItem()" [style.background]="isEditing ? '#f39c12' : '#27ae60'" style="color: white; border: none; padding: 14px 20px; font-size: 1rem; font-weight: bold; border-radius: 4px; cursor: pointer; width: 100%; transition: background 0.3s; display: block; text-align: center;">
+      {{ isEditing ? 'Salvar Alterações' : 'Cadastrar Item' }}
+    </button>
+  </div>
+
+  <!-- Listagem de Itens -->
+  <div style="background: #ffffff; padding: 20px; border-radius: 8px; box-shadow: 0 2px 6px rgba(0,0,0,0.03);">
+    <h3 style="margin-top: 0; color: #34495e; border-bottom: 2px solid #ecf0f1; padding-bottom: 10px;">Itens em Estoque</h3>
+
+    <div *ngIf="items.length === 0" style="text-align: center; color: #95a5a6; padding: 20px;">
+      Nenhum item cadastrado no momento. Adicione o primeiro acima!
+    </div>
+
+    <table *ngIf="items.length > 0" style="width: 100%; border-collapse: collapse; margin-top: 10px;">
+      <thead>
+        <tr style="background: #2c3e50; color: white; text-align: left;">
+          <th style="padding: 12px; border-top-left-radius: 4px;">ID</th>
+          <th style="padding: 12px;">Nome</th>
+          <th style="padding: 12px;">Descrição</th>
+          <th style="padding: 12px;">Qtd</th>
+          <th style="padding: 12px;">Status</th>
+          <th style="padding: 12px; text-align: center; border-top-right-radius: 4px;">Ações</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let item of items" style="border-bottom: 1px solid #ecf0f1;">
+          <td style="padding: 12px; color: #7f8c8d;">#{{ item.id }}</td>
+          <td style="padding: 12px; font-weight: 600; color: #2c3e50;">{{ item.name }}</td>
+          <td style="padding: 12px; color: #555;">{{ item.description || '-' }}</td>
+          <td style="padding: 12px; color: #555;">{{ item.quantity }}</td>
+          <td style="padding: 12px;">
+            <span [style.background]="item.status === 'Disponivel' ? '#d4efdf' : (item.status === 'Em Transito' ? '#fcf3cf' : '#fadbd8')"
+                  [style.color]="item.status === 'Disponivel' ? '#145a32' : (item.status === 'Em Transito' ? '#7d6608' : '#78281f')"
+                  style="padding: 4px 8px; border-radius: 12px; font-size: 0.85rem; font-weight: bold;">
+              {{ item.status }}
+            </span>
+          </td>
+          <td style="padding: 12px; text-align: center;">
+            <button type="button" (click)="editItem(item)" style="background: #f39c12; color: white; border: none; padding: 6px 10px; border-radius: 4px; cursor: pointer; font-size: 0.8rem; margin-right: 6px; font-weight: bold;">Editar</button>
+            <button type="button" (click)="abrirModalExclusao(item)" style="background: #c0392b; color: white; border: none; padding: 6px 10px; border-radius: 4px; cursor: pointer; font-size: 0.8rem; font-weight: bold;">Excluir</button>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- Modal de Confirmação de Exclusão Moderno -->
+<div *ngIf="itemParaExcluir" style="position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background-color: rgba(0,0,0,0.6); display: flex; justify-content: center; align-items: center; z-index: 9999;">
+  <div style="background: #ffffff; padding: 24px; border-radius: 8px; width: 400px; box-shadow: 0 10px 25px rgba(0,0,0,0.2); font-family: inherit;">
+    <h3 style="margin: 0 0 12px 0; color: #2c3e50; font-size: 1.2rem; font-weight: 600;">Confirmação de Exclusão</h3>
+    <p style="margin: 0 0 6px 0; color: #555; font-size: 0.95rem;">Tem certeza que deseja excluir o item <strong>{{ itemParaExcluir.name }}</strong>?</p>
+    <span style="font-size: 0.8rem; color: #95a5a6;">Esta ação não poderá ser desfeita.</span>
+    
+    <div style="margin-top: 24px; display: flex; justify-content: flex-end; gap: 10px;">
+      <button type="button" (click)="fecharModalExclusao()" style="background: #ecf0f1; border: 1px solid #bdc3c7; padding: 8px 16px; border-radius: 4px; cursor: pointer; color: #2c3e50; font-weight: 500;">Cancelar</button>
+      <button type="button" (click)="confirmarExclusao()" style="background: #c0392b; border: none; padding: 8px 16px; border-radius: 4px; cursor: pointer; color: white; font-weight: 500;">Sim, Excluir</button>
+    </div>
+  </div>
+</div>
