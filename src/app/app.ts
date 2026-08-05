@@ -1,4 +1,4 @@
-﻿import { Component, OnInit, DestroyRef } from '@angular/core';
+import { Component, OnInit, DestroyRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ItemService, Item } from './services/item.service';
@@ -161,19 +161,86 @@ export class AppComponent implements OnInit {
     const q = (event.target as HTMLInputElement).value.trim();
     this.itemsSearchQuery = q;
 
+    // If the input was cleared, immediately clear the filtered list and cancel any pending debounce search.
+    if (q === '') {
+      if (this.searchDebounceTimer) { clearTimeout(this.searchDebounceTimer); }
+      this.filteredItems = [];
+      return;
+    }
+
     if (this.searchDebounceTimer) { clearTimeout(this.searchDebounceTimer); }
     this.searchDebounceTimer = setTimeout(() => this.performSearch(), 220);
   }
 
+    // Normalize string: remove diacritics, lower-case, collapse repeated characters
+  private normalizeForSearch(s: string): string {
+    if (!s) return '';
+    // remove diacritics (accents)
+    let out = s.normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+    out = out.toLowerCase();
+    // collapse repeating characters (e.g., '\u006dateriall' -> 'material')
+    out = out.replace(/([a-z0-9])\1{1,}/g, '$1');
+    // trim and collapse spaces
+    out = out.replace(/\s+/g, ' ').trim();
+    return out;
+  }
+
+  // Simple Levenshtein distance (optimized iterative version)
+  private levenshtein(a: string, b: string): number {
+    if (a === b) return 0;
+    const al = a.length, bl = b.length;
+    if (al === 0) return bl;
+    if (bl === 0) return al;
+    let v0 = new Array(bl + 1).fill(0).map((_, i) => i);
+    let v1 = new Array(bl + 1).fill(0);
+    for (let i = 0; i < al; i++) {
+      v1[0] = i + 1;
+      for (let j = 0; j < bl; j++) {
+        const cost = a[i] === b[j] ? 0 : 1;
+        v1[j + 1] = Math.min(v1[j] + 1, v0[j + 1] + 1, v0[j] + cost);
+      }
+      const tmp = v0; v0 = v1; v1 = tmp;
+    }
+    return v0[bl];
+  }
+
   performSearch(): void {
     const q = this.itemsSearchQuery;
+    // Enforce minimum length of 3 characters for dynamic filtering.
+    // Until then, keep the filtered list empty (user must type >=3 to see results).
     if (!q || q.length < 3) {
-      // if query is short, show the full list
-      this.filteredItems = [...this.items];
+      this.filteredItems = [];
       return;
     }
 
-    const lower = q.toLowerCase();
-    this.filteredItems = this.items.filter(it => (it.name || '').toLowerCase().includes(lower)).slice(0, this.maxSearchResults);
+    const normalizedQuery = this.normalizeForSearch(q);
+    // limit results as a protection against extremely large lists
+    const results: Item[] = [];
+    for (const it of this.items) {
+      const name = (it.name || '').toString();
+      const desc = (it.description || '').toString();
+      const normalizedName = this.normalizeForSearch(name);
+      const normalizedDesc = this.normalizeForSearch(desc);
+
+      // direct contains check (fast) against name and description
+      if ((normalizedName && normalizedName.includes(normalizedQuery)) || (normalizedDesc && normalizedDesc.includes(normalizedQuery))) {
+        results.push(it);
+        if (results.length >= this.maxSearchResults) break;
+        continue;
+      }
+
+      // fallback: fuzzy match using Levenshtein with adaptive threshold against name only (cheaper)
+      const target = normalizedName || normalizedDesc;
+      if (!target) continue;
+      const threshold = Math.max(1, Math.floor(Math.min(normalizedQuery.length, target.length) * 0.25));
+      const dist = this.levenshtein(normalizedQuery, target);
+      if (dist <= threshold) {
+        results.push(it);
+        if (results.length >= this.maxSearchResults) break;
+      }
+    }
+
+    this.filteredItems = results;
   }
 }
+
